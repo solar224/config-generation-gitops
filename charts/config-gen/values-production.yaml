@@ -1,0 +1,10 @@
+ingress:
+  host: app.yourdomain.com
+  clusterIssuer: letsencrypt-prod
+
+infisical:
+  authentication:
+    universalAuth:
+      secretsScope:
+        projectSlug: ""   # REQUIRED: set to your Infisical project slug
+        envSlug: prod

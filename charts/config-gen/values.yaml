@@ -1,0 +1,119 @@
+image:
+  backend:
+    repository: ghcr.io/solar224/config-generation/backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: ghcr.io/solar224/config-generation/frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+backend:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  env:
+    DB_MAX_OPEN_CONNS: "10"
+    DB_MAX_IDLE_CONNS: "5"
+    DB_CONN_MAX_LIFETIME: "5m"
+  hpa:
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 70
+  pdb:
+    minAvailable: 1
+
+frontend:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  hpa:
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+  pdb:
+    minAvailable: 1
+  exporter:
+    image:
+      repository: nginx/nginx-prometheus-exporter
+      tag: "1.4.1"
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        cpu: 50m
+        memory: 32Mi
+
+database:
+  # CloudNativePG Cluster name; also used as DNS prefix for generated services
+  # e.g. clusterName-rw (primary), clusterName-ro (replica), clusterName-r (any)
+  clusterName: config-gen-db
+  instances: 2
+  storage:
+    size: 10Gi
+    storageClass: ""   # leave empty to use cluster default
+  # database and owner created by initdb bootstrap
+  bootstrap:
+    dbName: config_gen
+    ownerName: config_gen
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+pgbouncer:
+  instances: 2
+  poolMode: transaction
+  maxClientConn: "100"
+  defaultPoolSize: "20"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 300m
+      memory: 128Mi
+
+ingress:
+  host: app.yourdomain.com
+  clusterIssuer: letsencrypt-prod
+  annotations: {}
+
+# Infisical operator secret sync
+# The InfisicalSecret CR instructs the Infisical operator to sync secrets
+# from Infisical into a K8s Secret named `managedSecretName`.
+# Backend deployment uses envFrom referencing that Secret.
+infisical:
+  enabled: true
+  # Infisical server address (use https://app.infisical.com for cloud)
+  address: https://app.infisical.com
+  authentication:
+    universalAuth:
+      # K8s Secret holding clientId + clientSecret for Infisical machine identity
+      credentialsRef:
+        secretName: infisical-universal-auth
+        secretNamespace: infisical
+      secretsScope:
+        projectSlug: ""       # REQUIRED: set per environment
+        envSlug: prod         # prod | staging
+        secretsPath: "/"
+        recursive: false
+  # Name of the K8s Secret that Infisical operator will create/update
+  managedSecretName: config-gen-app-secret
+
+networkPolicy:
+  enabled: true

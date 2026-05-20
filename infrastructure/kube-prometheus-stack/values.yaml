@@ -56,6 +56,10 @@ grafana:
       enabled: true
     dashboards:
       enabled: true
+      # Discover dashboards in all namespaces (needed for app-level dashboard ConfigMaps)
+      searchNamespace: ALL
+      label: grafana_dashboard
+      labelValue: "1"
 
 alertmanager:
   alertmanagerSpec:

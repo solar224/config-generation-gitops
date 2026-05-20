@@ -1,0 +1,72 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.database.clusterName }}-postgres
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "config-gen.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: {{ .Values.database.clusterName }}
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow PgBouncer to connect to PostgreSQL
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/poolerName: {{ .Values.database.clusterName }}-pgbouncer
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow migrate job (using DATABASE_DIRECT_URL) to connect directly
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "config-gen.labels" . | nindent 14 }}
+              app.kubernetes.io/component: migrate
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow CloudNativePG operator (cnpg-system) to manage the cluster
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow inter-instance replication
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: {{ .Values.database.clusterName }}
+      ports:
+        - port: 5432
+          protocol: TCP
+
+  egress:
+    # Allow inter-instance streaming replication
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: {{ .Values.database.clusterName }}
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow S3 backup (optional, port 443)
+    - ports:
+        - port: 443
+          protocol: TCP
+    # Allow DNS resolution
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+{{- end }}

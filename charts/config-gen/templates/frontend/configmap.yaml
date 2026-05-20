@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "config-gen.frontend.fullname" . }}-nginx
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "config-gen.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+data:
+  default.conf: |
+    server {
+        listen 80;
+
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Expose stub_status for nginx-prometheus-exporter sidecar only
+        location /nginx-status {
+            stub_status on;
+            allow 127.0.0.1;
+            deny all;
+        }
+
+        # Proxy /api/ requests to backend service
+        location /api/ {
+            proxy_pass http://{{ include "config-gen.backend.fullname" . }}:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # SPA fallback — serve index.html for all non-file routes
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }

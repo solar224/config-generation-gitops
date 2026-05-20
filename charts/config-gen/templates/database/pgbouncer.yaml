@@ -1,0 +1,26 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: {{ .Values.database.clusterName }}-pgbouncer
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "config-gen.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pgbouncer
+spec:
+  cluster:
+    name: {{ .Values.database.clusterName }}
+  instances: {{ .Values.pgbouncer.instances }}
+  type: rw
+
+  pgbouncer:
+    poolMode: {{ .Values.pgbouncer.poolMode }}
+    parameters:
+      max_client_conn: {{ .Values.pgbouncer.maxClientConn | quote }}
+      default_pool_size: {{ .Values.pgbouncer.defaultPoolSize | quote }}
+
+  template:
+    spec:
+      containers:
+        - name: pgbouncer
+          resources:
+            {{- toYaml .Values.pgbouncer.resources | nindent 12 }}

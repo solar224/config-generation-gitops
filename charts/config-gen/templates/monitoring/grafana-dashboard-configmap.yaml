@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "config-gen.fullname" . }}-grafana-dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "config-gen.labels" . | nindent 4 }}
+    # Grafana sidecar picks up ConfigMaps with this label.
+    # Requires kube-prometheus-stack grafana.sidecar.dashboards.searchNamespace: ALL
+    grafana_dashboard: "1"
+data:
+  config-gen-overview.json: |
+    {
+      "annotations": { "list": [] },
+      "description": "Config Generation — Backend, Frontend, Database overview",
+      "editable": true,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 1,
+          "title": "Backend",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "reqps" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+          "id": 2,
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(config_gen_http_request_duration_seconds_count[5m])) by (method, route)",
+              "legendFormat": "{{`{{method}}`}} {{`{{route}}`}}"
+            }
+          ],
+          "title": "Backend Request Rate (req/s)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "s" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+          "id": 3,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(config_gen_http_request_duration_seconds_bucket[5m])) by (le, route))",
+              "legendFormat": "p99 {{`{{route}}`}}"
+            },
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(config_gen_http_request_duration_seconds_bucket[5m])) by (le, route))",
+              "legendFormat": "p50 {{`{{route}}`}}"
+            }
+          ],
+          "title": "Backend Latency (p50/p99)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "percentunit", "max": 1, "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+          "id": 4,
+          "targets": [
+            {
+              "expr": "sum(rate(config_gen_http_request_duration_seconds_count{status_code=~\"5..\"}[5m])) / sum(rate(config_gen_http_request_duration_seconds_count[5m]))",
+              "legendFormat": "5xx error rate"
+            }
+          ],
+          "title": "Backend 5xx Error Rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+          "id": 5,
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "auto", "colorMode": "thresholds" },
+          "targets": [
+            {
+              "expr": "config_gen_db_open_connections",
+              "legendFormat": "open connections"
+            }
+          ],
+          "title": "DB Open Connections",
+          "type": "gauge"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+          "id": 6,
+          "title": "Frontend",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "short", "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+          "id": 7,
+          "targets": [
+            {
+              "expr": "nginx_connections_active",
+              "legendFormat": "active"
+            },
+            {
+              "expr": "nginx_connections_waiting",
+              "legendFormat": "waiting"
+            }
+          ],
+          "title": "Nginx Active Connections",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "unit": "s" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+          "id": 8,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{exported_namespace=\"{{ .Release.Namespace }}\"}[5m])) by (le, ingress))",
+              "legendFormat": "p99 {{`{{ingress}}`}}"
+            }
+          ],
+          "title": "Ingress P99 Latency",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "tags": ["config-gen"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Config Generation Overview",
+      "uid": "config-gen-overview",
+      "version": 1
+    }

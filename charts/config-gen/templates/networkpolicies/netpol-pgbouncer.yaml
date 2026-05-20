@@ -1,0 +1,52 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.database.clusterName }}-pgbouncer
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "config-gen.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pgbouncer
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/poolerName: {{ .Values.database.clusterName }}-pgbouncer
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow backend to connect to PgBouncer
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "config-gen.backend.selectorLabels" . | nindent 14 }}
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow migrate job to connect (for direct URL via PgBouncer if needed)
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "config-gen.labels" . | nindent 14 }}
+              app.kubernetes.io/component: migrate
+      ports:
+        - port: 5432
+          protocol: TCP
+
+  egress:
+    # Allow PgBouncer to reach PostgreSQL primary
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: {{ .Values.database.clusterName }}
+      ports:
+        - port: 5432
+          protocol: TCP
+    # Allow DNS resolution
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+{{- end }}
