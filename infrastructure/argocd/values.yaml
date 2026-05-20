@@ -1,0 +1,90 @@
+## ArgoCD Helm values
+##
+## Phase 0 — Bootstrap (manual, one-time):
+##
+##   helm repo add argo https://argoproj.github.io/argo-helm
+##   helm install argocd argo/argo-cd \
+##     -n argocd --create-namespace \
+##     -f infrastructure/argocd/values.yaml
+##
+## After ArgoCD is ready (~2 min), apply the App-of-Apps to hand off GitOps control:
+##
+##   kubectl -n argocd wait deploy/argocd-server --for=condition=available --timeout=120s
+##   kubectl apply -f apps/app-of-apps.yaml
+##
+## Subsequent ArgoCD upgrades are self-managed via apps/infrastructure/argocd.yaml
+## once Phase 4 is complete.
+
+global:
+  # TODO: replace with your ArgoCD domain (used in Phase 1 when ingress is configured)
+  domain: argocd.yourdomain.com
+
+configs:
+  params:
+    ## Run ArgoCD server without TLS on the pod — ingress-nginx terminates TLS (Phase 1).
+    ## Without this the server generates a self-signed cert that conflicts with ingress
+    ## SSL passthrough and makes browser trust impossible.
+    server.insecure: "true"
+
+  ## Pre-register the GitOps repository so ArgoCD can sync on first boot without
+  ## requiring manual repo registration in the ArgoCD UI.
+  ##
+  ## Private repo: uncomment username/password. Use a fine-grained PAT scoped to
+  ## config-generation-gitops (Contents: read) or a GitHub App installation token
+  ## (preferred — see plan Phase 5 for GitHub App setup). Never commit plaintext tokens;
+  ## inject via a Secret manager or CI pipeline that patches this secret post-install.
+  repositories:
+    config-generation-gitops:
+      url: https://github.com/YOUR_ORG/config-generation-gitops  # TODO: replace
+      name: config-generation-gitops
+      type: git
+      # username: x-access-token   # uncomment for private repo
+      # password: ""               # inject via Secret; do NOT commit plaintext
+
+server:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+repoServer:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+applicationSet:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+redis:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+notifications:
+  enabled: false

@@ -1,0 +1,36 @@
+## stakater/Reloader Helm values
+##
+## Phase 0 — Bootstrap (manual, one-time):
+##
+##   helm repo add stakater https://stakater.github.io/stakater-charts
+##   helm install reloader stakater/reloader \
+##     -n reloader --create-namespace \
+##     -f infrastructure/reloader/values.yaml
+##
+## Installed into namespace "reloader" (not kube-system): kube-system is restricted
+## by PodSecurity Admission on GKE Autopilot / EKS / AKS managed clusters, which
+## can prevent Reloader from scheduling.
+##
+## After bootstrap, ArgoCD App-of-Apps takes over upgrades via
+## apps/infrastructure/reloader.yaml (Phase 4).
+##
+## Usage: Reloader watches K8s Secrets for changes. When Infisical syncs an updated
+## secret into the cluster, Reloader detects the change and triggers a rolling restart
+## on any Deployment annotated with:
+##   reloader.stakater.com/auto: "true"
+## This annotation is added to backend and frontend Deployments in Phase 3.
+
+reloader:
+  ## watchGlobally: false — only restart Deployments in namespaces that contain
+  ## annotated resources, rather than watching all namespaces cluster-wide.
+  ## This reduces unnecessary list/watch RBAC scope and API server load.
+  watchGlobally: false
+
+  deployment:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 32Mi
