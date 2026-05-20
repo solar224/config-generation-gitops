@@ -8,17 +8,51 @@ image:
 ingress:
   host: configstaging.qzz.io
   clusterIssuer: letsencrypt-staging
-backend:
-  replicaCount: 1
-frontend:
-  replicaCount: 1
 database:
   clusterName: config-gen-staging-db
   instances: 1
   storage:
     size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
 pgbouncer:
   instances: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 64Mi
+backend:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  hpa:
+    minReplicas: 1
+    maxReplicas: 2
+frontend:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  hpa:
+    minReplicas: 1
+    maxReplicas: 2
 infisical:
   enabled: false
   authentication:
