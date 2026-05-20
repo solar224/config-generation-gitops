@@ -33,6 +33,15 @@ spec:
       ports:
         - port: 5432
           protocol: TCP
+    # Allow backend to connect directly to PostgreSQL
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "config-gen.labels" . | nindent 14 }}
+              app.kubernetes.io/component: backend
+      ports:
+        - port: 5432
+          protocol: TCP
     # Allow CloudNativePG operator (cnpg-system) to manage the cluster
     - from:
         - namespaceSelector:

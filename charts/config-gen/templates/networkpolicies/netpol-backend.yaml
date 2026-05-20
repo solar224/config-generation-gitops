@@ -42,6 +42,14 @@ spec:
           protocol: TCP
 
   egress:
+    # Allow backend to reach PostgreSQL directly on port 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: {{ .Values.database.clusterName }}
+      ports:
+        - port: 5432
+          protocol: TCP
     # Allow backend to reach PgBouncer on port 5432
     - to:
         - podSelector:
