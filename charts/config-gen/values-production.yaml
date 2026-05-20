@@ -1,3 +1,11 @@
+# Image tags are updated automatically by the CD pipeline (cd-build-push.yml).
+# Do not edit manually.
+image:
+  backend:
+    tag: "latest"
+  frontend:
+    tag: "latest"
+
 ingress:
   host: app.yourdomain.com
   clusterIssuer: letsencrypt-prod
