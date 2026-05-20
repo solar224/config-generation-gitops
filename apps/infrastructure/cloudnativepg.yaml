@@ -32,3 +32,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true  # clusters.postgresql.cnpg.io CRD is large; client-side apply hits 256KB annotation limit
