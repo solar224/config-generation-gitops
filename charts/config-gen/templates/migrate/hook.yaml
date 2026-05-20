@@ -31,3 +31,10 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.infisical.managedSecretName }}
+          env:
+            # DATABASE_DIRECT_URL comes from the CNPG-created secret (bypasses PgBouncer)
+            - name: DATABASE_DIRECT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.clusterName }}-app
+                  key: uri

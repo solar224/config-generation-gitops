@@ -6,7 +6,7 @@ image:
   frontend:
     tag: "5a774ca7887f8ec2efec38c5f37c4f7d04dd523d"
 ingress:
-  host: staging.yourdomain.com
+  host: configstaging.qzz.io
   clusterIssuer: letsencrypt-staging
 backend:
   replicaCount: 1
@@ -20,8 +20,9 @@ database:
 pgbouncer:
   instances: 1
 infisical:
+  enabled: false
   authentication:
     universalAuth:
       secretsScope:
-        projectSlug: "" # REQUIRED: set to your Infisical project slug
+        projectSlug: ""
         envSlug: staging
