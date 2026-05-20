@@ -34,6 +34,12 @@ prometheus:
         memory: 1Gi
 
 grafana:
+  ## Pin to Grafana 11.x — Grafana 13's embedded App Platform apiserver causes
+  ## all auth to time out (context canceled) on kind/dev clusters, resulting in
+  ## a liveness-probe crash loop. Grafana 11.5.2 is the latest stable LTS.
+  image:
+    tag: "11.5.2"
+
   ## TODO: inject via Infisical / K8s secret in production.
   ## Change before exposing Grafana publicly.
   adminPassword: admin
@@ -49,13 +55,6 @@ grafana:
     limits:
       cpu: 500m
       memory: 256Mi
-
-  ## Grafana 13 App Platform (embedded K8s apiserver) causes request timeouts
-  ## on kind/dev clusters. Disable kubernetesDashboards to fall back to the
-  ## traditional dashboard API and prevent the liveness probe crash loop.
-  grafana.ini:
-    feature_toggles:
-      kubernetesDashboards: false
 
   ## Pre-provision a datasource for Prometheus
   sidecar:
