@@ -22,20 +22,15 @@
 crds:
   enabled: true
 
-## Use server-side apply for CRDs to avoid the 256 KB annotation size limit
-## that client-side apply hits on large CRD manifests
-global:
-  leaderElection:
-    namespace: cert-manager
-
-controller:
-  resources:
-    requests:
-      cpu: 10m
-      memory: 64Mi
-    limits:
-      cpu: 100m
-      memory: 128Mi
+## Resource limits for the main cert-manager controller pod
+## (top-level 'resources' key — 'controller' is not a valid schema property)
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
 
 webhook:
   resources:
