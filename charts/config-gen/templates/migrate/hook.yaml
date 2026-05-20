@@ -7,8 +7,8 @@ metadata:
     {{- include "config-gen.labels" . | nindent 4 }}
     app.kubernetes.io/component: migrate
   annotations:
-    # Run before sync; delete the Job after it succeeds
-    argocd.argoproj.io/hook: PreSync
+    # Run after all resources are Healthy (DB cluster ready, secret exists)
+    argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   backoffLimit: 3
