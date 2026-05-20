@@ -50,6 +50,13 @@ grafana:
       cpu: 500m
       memory: 256Mi
 
+  ## Grafana 13 App Platform (embedded K8s apiserver) causes request timeouts
+  ## on kind/dev clusters. Disable kubernetesDashboards to fall back to the
+  ## traditional dashboard API and prevent the liveness probe crash loop.
+  grafana.ini:
+    feature_toggles:
+      kubernetesDashboards: false
+
   ## Pre-provision a datasource for Prometheus
   sidecar:
     datasources:
