@@ -36,22 +36,22 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
+  ignoreDifferences:
+    ## cert-manager injects caBundle into webhook configurations after ArgoCD
+    ## applies them. Without ignoreDifferences, ArgoCD sees this injected field
+    ## as drift and loops trying to remove it.
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    ## cert-manager injects caBundle into webhook configurations after ArgoCD
-    ## applies them. Without ignoreDifferences, ArgoCD sees this injected field
-    ## as drift and loops trying to remove it.
-    ignoreDifferences:
-      - group: admissionregistration.k8s.io
-        kind: MutatingWebhookConfiguration
-        jsonPointers:
-          - /webhooks/0/clientConfig/caBundle
-      - group: admissionregistration.k8s.io
-        kind: ValidatingWebhookConfiguration
-        jsonPointers:
-          - /webhooks/0/clientConfig/caBundle
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true  # avoids 256KB annotation limit on Prometheus CRDs
