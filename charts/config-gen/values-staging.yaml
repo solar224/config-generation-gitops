@@ -7,7 +7,7 @@ image:
     tag: "3e8226e3e18c9273f9763548e35efcc8fe855e98"
 ingress:
   host: configstaging.qzz.io
-  clusterIssuer: letsencrypt-staging
+  clusterIssuer: letsencrypt-prod
 database:
   clusterName: config-gen-staging-db
   instances: 1
