@@ -22,6 +22,12 @@
 crds:
   enabled: true
 
+## Use public recursive nameservers for DNS-01 propagation checks
+## instead of querying authoritative nameservers directly (which may be unreachable).
+extraArgs:
+  - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53
+  - --dns01-recursive-nameservers-only
+
 ## Resource limits for the main cert-manager controller pod
 ## (top-level 'resources' key — 'controller' is not a valid schema property)
 resources:
