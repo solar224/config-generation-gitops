@@ -37,8 +37,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              {{- include "config-gen.labels" . | nindent 14 }}
-              app.kubernetes.io/component: backend
+              {{- include "config-gen.backend.selectorLabels" . | nindent 14 }}
       ports:
         - port: 5432
           protocol: TCP
