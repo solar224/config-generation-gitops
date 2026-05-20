@@ -2,32 +2,26 @@
 # Do not edit manually.
 image:
   backend:
-    tag: "latest"
+    tag: "5a774ca7887f8ec2efec38c5f37c4f7d04dd523d"
   frontend:
-    tag: "latest"
-
+    tag: "5a774ca7887f8ec2efec38c5f37c4f7d04dd523d"
 ingress:
   host: staging.yourdomain.com
   clusterIssuer: letsencrypt-staging
-
 backend:
   replicaCount: 1
-
 frontend:
   replicaCount: 1
-
 database:
   clusterName: config-gen-staging-db
   instances: 1
   storage:
     size: 5Gi
-
 pgbouncer:
   instances: 1
-
 infisical:
   authentication:
     universalAuth:
       secretsScope:
-        projectSlug: ""   # REQUIRED: set to your Infisical project slug
+        projectSlug: "" # REQUIRED: set to your Infisical project slug
         envSlug: staging
