@@ -1,0 +1,40 @@
+## config-gen Staging ArgoCD Application
+##
+## sync-wave: "1" — syncs AFTER infra Applications (wave -1) are Healthy.
+##
+## CD flow: GitHub Actions pushes directly to gitops main branch on every
+## merge to the app repo's main branch → ArgoCD auto-syncs immediately.
+##
+## Resources are reduced vs production (see values-staging.yaml):
+##   backend.replicaCount: 1, frontend.replicaCount: 1
+##   database.instances: 1 (no standby), storage: 5Gi
+##   pgbouncer.instances: 1
+##   ingress.clusterIssuer: letsencrypt-staging (avoids Let's Encrypt rate limits)
+##
+## PreSync hook (migrate/hook.yaml) runs golang-migrate before Deployment update.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: config-gen-staging
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/solar224/config-generation-gitops
+    targetRevision: main
+    path: charts/config-gen
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-staging.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: config-gen-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

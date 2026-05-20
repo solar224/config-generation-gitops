@@ -1,0 +1,37 @@
+## config-gen Production ArgoCD Application
+##
+## sync-wave: "1" — syncs AFTER infra Applications (wave -1) are Healthy,
+## ensuring CloudNativePG, Infisical, cert-manager, and Prometheus CRDs
+## exist before the config-gen chart resources are applied.
+##
+## CD flow: GitHub Actions opens a PR to update image tags in values-production.yaml;
+## a human reviewer merges the PR → ArgoCD detects the change and auto-syncs.
+##
+## PreSync hook (migrate/hook.yaml) runs golang-migrate before the Deployment
+## is updated, using DATABASE_DIRECT_URL (bypasses PgBouncer).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: config-gen-production
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/solar224/config-generation-gitops
+    targetRevision: main
+    path: charts/config-gen
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-production.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: config-gen
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
