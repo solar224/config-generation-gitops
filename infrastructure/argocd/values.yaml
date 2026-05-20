@@ -35,7 +35,7 @@ configs:
   ## inject via a Secret manager or CI pipeline that patches this secret post-install.
   repositories:
     config-generation-gitops:
-      url: https://github.com/YOUR_ORG/config-generation-gitops  # TODO: replace
+      url: https://github.com/solar224/config-generation-gitops
       name: config-generation-gitops
       type: git
       # username: x-access-token   # uncomment for private repo

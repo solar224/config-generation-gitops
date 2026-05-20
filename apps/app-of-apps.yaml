@@ -6,8 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    # TODO: replace with your actual gitops repo URL
-    repoURL: https://github.com/YOUR_ORG/config-generation-gitops
+    repoURL: https://github.com/solar224/config-generation-gitops
     targetRevision: main
     path: apps
     directory:
