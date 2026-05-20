@@ -2,17 +2,15 @@
 # Do not edit manually.
 image:
   backend:
-    tag: "latest"
+    tag: "5a774ca7887f8ec2efec38c5f37c4f7d04dd523d"
   frontend:
-    tag: "latest"
-
+    tag: "5a774ca7887f8ec2efec38c5f37c4f7d04dd523d"
 ingress:
   host: app.yourdomain.com
   clusterIssuer: letsencrypt-prod
-
 infisical:
   authentication:
     universalAuth:
       secretsScope:
-        projectSlug: ""   # REQUIRED: set to your Infisical project slug
+        projectSlug: "" # REQUIRED: set to your Infisical project slug
         envSlug: prod
