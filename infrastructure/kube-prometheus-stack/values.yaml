@@ -84,3 +84,15 @@ kube-state-metrics:
     limits:
       cpu: 100m
       memory: 64Mi
+
+prometheusOperator:
+  admissionWebhooks:
+    ## Use cert-manager (already installed in Phase 0/1) to issue the admission
+    ## webhook TLS cert. This eliminates the kube-prometheus-stack-admission-create
+    ## and kube-prometheus-stack-admission-patch Jobs which, when pruned by ArgoCD,
+    ## cause a sync retry loop ("Resource ... is missing, might have been deleted").
+    certManager:
+      enabled: true
+    ## Disable the built-in patch Jobs (replaced by cert-manager above)
+    patch:
+      enabled: false
