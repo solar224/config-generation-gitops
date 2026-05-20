@@ -1,0 +1,20 @@
+## Self-signed ClusterIssuer — for local kind cluster testing.
+## No real domain or DNS record required.
+##
+## Usage in Ingress:
+##   annotations:
+##     cert-manager.io/cluster-issuer: selfsigned
+##
+## Note: Browsers will show an untrusted cert warning (expected for self-signed).
+## For local testing, trust the cert in your OS keystore or use --insecure with curl.
+##
+## sync-wave: "1" — applied AFTER cert-manager Helm chart resources (wave 0) so
+## the ClusterIssuer CRD and validating webhook are fully established first.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  selfSigned: {}

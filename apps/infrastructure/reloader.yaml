@@ -1,0 +1,40 @@
+## Reloader ArgoCD Application
+## Chart: stakater/reloader v2.2.11
+##
+## Phase 0 bootstrap: Reloader was manually installed via
+##   helm install reloader stakater/reloader -n reloader --create-namespace \
+##     -f infrastructure/reloader/values.yaml
+##
+## This Application adopts that release so ArgoCD manages future upgrades.
+## On first sync, ArgoCD reconciles the existing Reloader manifests
+## (no re-install; Helm values are identical).
+##
+## sync-wave: "-1" — infra wave, syncs before app Applications.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: reloader
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://stakater.github.io/stakater-charts
+      chart: reloader
+      targetRevision: 2.2.11
+      helm:
+        valueFiles:
+          - $gitops/infrastructure/reloader/values.yaml
+    - repoURL: https://github.com/solar224/config-generation-gitops
+      targetRevision: main
+      ref: gitops
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: reloader
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

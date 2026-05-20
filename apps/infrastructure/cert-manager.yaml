@@ -1,0 +1,45 @@
+## cert-manager ArgoCD Application
+## Chart: jetstack/cert-manager v1.20.2
+##
+## sync-wave: "-1" — this infra Application syncs before app Applications (wave 1),
+## ensuring cert-manager CRDs exist before the config-gen chart renders Certificate
+## and Ingress (TLS) resources.
+##
+## Multi-source:
+##   source 1 — cert-manager Helm chart (uses values from source 2)
+##   source 2 — gitops repo ref (provides values file path resolution)
+##   source 3 — ClusterIssuer manifests from gitops repo
+##              (sync-wave: "1" on each issuer = applied after cert-manager webhook
+##               is Running, preventing "no kind ClusterIssuer registered" errors)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: v1.20.2
+      helm:
+        valueFiles:
+          - $gitops/infrastructure/cert-manager/values.yaml
+    - repoURL: https://github.com/solar224/config-generation-gitops
+      targetRevision: main
+      ref: gitops
+    - repoURL: https://github.com/solar224/config-generation-gitops
+      targetRevision: main
+      path: infrastructure/cert-manager/issuers
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true  # avoids 256KB annotation limit on cert-manager CRDs

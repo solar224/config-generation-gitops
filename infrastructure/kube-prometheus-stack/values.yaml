@@ -1,0 +1,86 @@
+## kube-prometheus-stack Helm values
+## Chart: prometheus-community/kube-prometheus-stack v85.2.0
+## Repo:  https://prometheus-community.github.io/helm-charts
+##
+## Phase 1 — Prometheus + Grafana + Alertmanager
+## Namespace: monitoring (created via ArgoCD syncOptions: CreateNamespace=true)
+
+prometheus:
+  prometheusSpec:
+    ## CRITICAL: kube-prometheus-stack defaults to
+    ##   serviceMonitorSelectorNilUsesHelmValues: true
+    ## which restricts Prometheus to only scrape ServiceMonitors from the same
+    ## Helm release (namespace: monitoring). ServiceMonitors in config-gen and
+    ## config-gen-staging would be silently ignored.
+    ##
+    ## Set all three to false / {} to discover ServiceMonitors across ALL namespaces.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}          ## select ALL ServiceMonitors
+    serviceMonitorNamespaceSelector: {} ## across ALL namespaces
+
+    podMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector: {}
+    podMonitorNamespaceSelector: {}
+
+    ## Retain metrics for 15 days
+    retention: 15d
+
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+
+grafana:
+  ## TODO: inject via Infisical / K8s secret in production.
+  ## Change before exposing Grafana publicly.
+  adminPassword: admin
+
+  persistence:
+    enabled: true
+    size: 2Gi
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  ## Pre-provision a datasource for Prometheus
+  sidecar:
+    datasources:
+      enabled: true
+    dashboards:
+      enabled: true
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi

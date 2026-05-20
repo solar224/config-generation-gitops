@@ -1,0 +1,31 @@
+## Let's Encrypt STAGING ClusterIssuer
+##
+## Use for testing ACME HTTP01 challenge flow without hitting Let's Encrypt
+## production rate limits. Staging certs are signed by a fake CA and will
+## show browser warnings — that's expected.
+##
+## Prerequisites:
+##   - A real public domain with DNS A record pointing to your cluster's ingress IP
+##   - Port 80 must be reachable from the internet (required for HTTP01 challenge)
+##   - TODO: replace your@email.com with a real email address
+##
+## After confirming issuance works on staging, switch to letsencrypt-prod.
+##
+## sync-wave: "1" — applied after cert-manager webhook is ready.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    # TODO: replace with your email (used for expiry notifications)
+    email: your@email.com
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx

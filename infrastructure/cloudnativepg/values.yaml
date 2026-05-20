@@ -1,0 +1,22 @@
+## CloudNativePG operator Helm values
+## Chart: cnpg/cloudnative-pg v0.28.2
+## Repo:  https://cloudnative-pg.github.io/charts
+##
+## Phase 1 — installs the CloudNativePG operator only.
+## The operator manages the lifecycle of PostgreSQL clusters via the
+## Cluster CRD. The actual Cluster resource (primary + standby + PVC)
+## is defined in charts/config-gen/templates/database/cluster.yaml (Phase 3).
+##
+## After this operator is installed, you can create Cluster resources in
+## any namespace and the operator will reconcile them.
+##
+## Backup target (Phase 3): S3-compatible object storage (WAL archiving + base backup)
+## RPO ≤ 5 min, RTO ≤ 30s via automatic standby promotion
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 200Mi
+  requests:
+    cpu: 10m
+    memory: 100Mi

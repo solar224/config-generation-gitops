@@ -1,0 +1,65 @@
+## cert-manager Helm values
+## Chart: jetstack/cert-manager v1.20.2
+## Repo:  https://charts.jetstack.io
+##
+## Phase 1 — managed by ArgoCD (apps/infrastructure/cert-manager.yaml)
+##
+## ClusterIssuer manifests are co-deployed from:
+##   infrastructure/cert-manager/issuers/
+##
+## Available ClusterIssuers after sync:
+##   selfsigned           — for local kind testing (no real domain needed)
+##   letsencrypt-staging  — ACME HTTP01; requires public DNS + domain
+##   letsencrypt-prod     — ACME HTTP01; requires public DNS + domain
+##
+## Usage in Ingress:
+##   annotations:
+##     cert-manager.io/cluster-issuer: letsencrypt-prod   # production
+##     cert-manager.io/cluster-issuer: selfsigned         # local kind
+
+## Install cert-manager CRDs (Certificate, ClusterIssuer, Issuer, etc.)
+## crds.enabled replaces the deprecated installCRDs flag in v1.16+
+crds:
+  enabled: true
+
+## Use server-side apply for CRDs to avoid the 256 KB annotation size limit
+## that client-side apply hits on large CRD manifests
+global:
+  leaderElection:
+    namespace: cert-manager
+
+controller:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+webhook:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+cainjector:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+startupapicheck:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi

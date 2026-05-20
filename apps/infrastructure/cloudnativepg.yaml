@@ -1,0 +1,34 @@
+## CloudNativePG operator ArgoCD Application
+## Chart: cnpg/cloudnative-pg v0.28.2
+##
+## sync-wave: "-1" — installs the operator and CRDs (Cluster, Backup, etc.)
+## before config-gen chart tries to render the Cluster CRD in Phase 3.
+## Without the CRDs present, Helm template rendering fails.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudnativepg
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://cloudnative-pg.github.io/charts
+      chart: cloudnative-pg
+      targetRevision: 0.28.2
+      helm:
+        valueFiles:
+          - $gitops/infrastructure/cloudnativepg/values.yaml
+    - repoURL: https://github.com/solar224/config-generation-gitops
+      targetRevision: main
+      ref: gitops
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

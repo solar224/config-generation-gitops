@@ -1,0 +1,45 @@
+## kube-prometheus-stack ArgoCD Application
+## Chart: prometheus-community/kube-prometheus-stack v85.2.0
+##
+## sync-wave: "-1" — installs Prometheus CRDs (ServiceMonitor, PodMonitor,
+## PrometheusRule, etc.) before config-gen chart renders ServiceMonitor
+## resources in Phase 3.
+##
+## Critical values (see infrastructure/kube-prometheus-stack/values.yaml):
+##   serviceMonitorSelectorNilUsesHelmValues: false
+##   serviceMonitorSelector: {}
+##   serviceMonitorNamespaceSelector: {}
+## Without these, Prometheus silently ignores ServiceMonitors in config-gen
+## and config-gen-staging namespaces.
+##
+## Uses ServerSideApply to avoid annotation size limit on large CRDs
+## (same reason as cert-manager).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 85.2.0
+      helm:
+        valueFiles:
+          - $gitops/infrastructure/kube-prometheus-stack/values.yaml
+    - repoURL: https://github.com/solar224/config-generation-gitops
+      targetRevision: main
+      ref: gitops
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true  # avoids 256KB annotation limit on Prometheus CRDs

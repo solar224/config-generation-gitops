@@ -1,0 +1,36 @@
+## Infisical secrets-operator ArgoCD Application
+## Chart: infisical/secrets-operator v0.10.33
+##
+## sync-wave: "-1" — installs operator and InfisicalSecret CRD before
+## config-gen chart renders the InfisicalSecret resource in Phase 3.
+##
+## See infrastructure/infisical/values.yaml for prerequisite setup instructions
+## (Infisical project + Machine Identity credentials).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infisical
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
+      chart: secrets-operator
+      targetRevision: 0.10.33
+      helm:
+        valueFiles:
+          - $gitops/infrastructure/infisical/values.yaml
+    - repoURL: https://github.com/solar224/config-generation-gitops
+      targetRevision: main
+      ref: gitops
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: infisical
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

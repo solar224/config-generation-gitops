@@ -1,0 +1,33 @@
+## Infisical secrets-operator Helm values
+## Chart: infisical/secrets-operator v0.10.33
+## Repo:  https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
+##
+## Phase 1 — installs the Infisical operator.
+## The operator watches InfisicalSecret CRDs and syncs secrets from the
+## Infisical platform into K8s Secrets. App pods reference those K8s Secrets
+## via envFrom (no secrets hardcoded in manifests).
+##
+## The InfisicalSecret CRD is defined in:
+##   charts/config-gen/templates/secrets/infisical-secret.yaml (Phase 3)
+##
+## Prerequisites (one-time setup, done outside GitOps):
+##   1. Create a project in Infisical (Cloud or self-hosted)
+##   2. Store the following secrets in Infisical:
+##      - DATABASE_URL        postgres://user:pass@pgbouncer:5432/db?default_query_exec_mode=simple_protocol
+##      - DATABASE_DIRECT_URL postgres://user:pass@<cluster>-rw:5432/db?sslmode=require
+##                            (direct to CloudNativePG primary, bypasses PgBouncer;
+##                             used ONLY by the PreSync migration hook in Phase 3)
+##      - JWT_SECRET          (random, 32+ bytes)
+##      - ADMIN_USERNAME
+##      - ADMIN_PASSWORD
+##   3. Create a Machine Identity (client credentials) with read access to the project
+##      → note clientId + clientSecret
+##   4. These credentials go into the InfisicalSecret CRD (Phase 3 step 4)
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
