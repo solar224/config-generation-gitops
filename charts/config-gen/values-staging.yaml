@@ -2,9 +2,9 @@
 # Do not edit manually.
 image:
   backend:
-    tag: "3e8226e3e18c9273f9763548e35efcc8fe855e98"
+    tag: "278056c62639edf1717118ce928eb13c85bd4944"
   frontend:
-    tag: "3e8226e3e18c9273f9763548e35efcc8fe855e98"
+    tag: "278056c62639edf1717118ce928eb13c85bd4944"
 ingress:
   host: configstaging.qzz.io
   clusterIssuer: letsencrypt-prod
