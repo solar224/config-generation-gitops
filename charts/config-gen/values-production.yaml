@@ -56,3 +56,18 @@ infisical:
       secretsScope:
         projectSlug: ""
         envSlug: prod
+
+oidc:
+  enabled: true
+  issuerURL: https://logdex.qzz.io
+  clientID: config-gen-production
+  redirectURL: https://production.qzz.io/api/auth/oidc/callback
+  providerName: Dex (GitHub)
+  scopes: openid profile email
+  superuserEmails:
+    - cyc.cs14@nycu.edu.tw
+  allowedEmailDomains:
+    - nycu.edu.tw
+  clientSecretRef:
+    name: config-gen-oidc-secret
+    key: OIDC_CLIENT_SECRET
