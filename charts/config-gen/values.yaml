@@ -46,6 +46,14 @@ oidc:
   clientSecretRef:
     name: config-gen-oidc-secret
     key: OIDC_CLIENT_SECRET
+  # Pod hostAliases injected when set. Required when the backend pod cannot
+  # reach the public issuerURL via the LB (hairpin NAT) — point the Dex
+  # hostname at the in-cluster ingress-nginx ClusterIP so TLS+SNI still work.
+  # Example:
+  #   hostAliases:
+  #     - ip: 10.96.95.35
+  #       hostnames: [logdex.qzz.io]
+  hostAliases: []
 
 frontend:
   replicaCount: 2
