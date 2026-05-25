@@ -67,12 +67,14 @@ config:
   staticClients:
     - id: config-gen-staging
       name: Config Generation (staging)
-      secret: $STAGING_CLIENT_SECRET
+      # Dex does NOT expand $VAR in staticClients.secret; use secretEnv to
+      # read the value from the env var injected via envFrom: dex-secrets.
+      secretEnv: STAGING_CLIENT_SECRET
       redirectURIs:
         - https://configstaging.qzz.io/api/auth/oidc/callback
     - id: config-gen-production
       name: Config Generation (production)
-      secret: $PRODUCTION_CLIENT_SECRET
+      secretEnv: PRODUCTION_CLIENT_SECRET
       redirectURIs:
         - https://production.qzz.io/api/auth/oidc/callback
 
