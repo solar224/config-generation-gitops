@@ -64,4 +64,27 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+    {{- if .Values.oidc.enabled }}
+    # Allow backend to reach the OIDC issuer (Dex). When the issuer URL
+    # points at a public hostname served by our own ingress (hairpin via
+    # hostAliases), traffic exits to ingress-nginx on 443. Also permit
+    # direct access to the Dex service on 5556 in case the issuer URL
+    # is later switched to the in-cluster service DNS.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 443
+          protocol: TCP
+        - port: 80
+          protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: dex
+      ports:
+        - port: 5556
+          protocol: TCP
+    {{- end }}
 {{- end }}
