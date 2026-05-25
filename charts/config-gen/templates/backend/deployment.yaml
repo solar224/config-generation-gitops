@@ -19,6 +19,10 @@ spec:
         # Trigger rolling restart when the managed secret changes
         reloader.stakater.com/auto: "true"
     spec:
+      {{- if and .Values.oidc.enabled .Values.oidc.hostAliases }}
+      hostAliases:
+        {{- toYaml .Values.oidc.hostAliases | nindent 8 }}
+      {{- end }}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:

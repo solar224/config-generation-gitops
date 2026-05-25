@@ -75,3 +75,7 @@ oidc:
   clientSecretRef:
     name: config-gen-oidc-secret
     key: OIDC_CLIENT_SECRET
+  hostAliases:
+    - ip: 10.96.95.35
+      hostnames:
+        - logdex.qzz.io
