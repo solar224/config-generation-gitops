@@ -28,6 +28,25 @@ backend:
   pdb:
     minAvailable: 1
 
+# OIDC / Dex single-sign-on configuration.
+# When oidc.enabled=true, the backend Deployment receives all OIDC_* env vars.
+# OIDC_CLIENT_SECRET is sourced from a K8s Secret bootstrapped out-of-band:
+#   kubectl create secret generic <oidc.clientSecretRef.name> -n <ns> \
+#     --from-literal=<oidc.clientSecretRef.key>=<random-hex-matching-dex-staticClient>
+oidc:
+  enabled: false
+  issuerURL: https://logdex.qzz.io
+  clientID: ""           # set per environment
+  redirectURL: ""        # set per environment (https://<host>/api/auth/oidc/callback)
+  browserAuthURL: ""     # optional; only needed when issuerURL != browser-visible URL
+  providerName: Dex
+  scopes: "openid profile email"
+  superuserEmails: []    # list of emails granted superuser role on first login
+  allowedEmailDomains: []  # list of email domains permitted to log in (e.g. nycu.edu.tw)
+  clientSecretRef:
+    name: config-gen-oidc-secret
+    key: OIDC_CLIENT_SECRET
+
 frontend:
   replicaCount: 2
   resources:

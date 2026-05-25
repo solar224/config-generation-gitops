@@ -1,0 +1,36 @@
+## Dex IdP ArgoCD Application
+## Chart: dex/dex (https://charts.dexidp.io)
+##
+## sync-wave: "-1" — infra Applications sync before app Applications (wave 1),
+## ensuring Dex is reachable before the config-gen backend tries to fetch
+## /.well-known/openid-configuration at OIDC client init time.
+##
+## Multi-source: source 1 = Dex chart, source 2 = gitops repo for values file.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dex
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.dexidp.io
+      chart: dex
+      targetRevision: 0.23.0
+      helm:
+        valueFiles:
+          - $gitops/infrastructure/dex/values.yaml
+    - repoURL: https://github.com/solar224/config-generation-gitops
+      targetRevision: main
+      ref: gitops
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dex
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

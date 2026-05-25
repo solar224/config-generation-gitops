@@ -1,0 +1,112 @@
+## Dex IdP — shared OIDC provider for both staging and production.
+##
+## Bootstrap prerequisite (one-time, NOT in git):
+##   kubectl create namespace dex
+##   kubectl create secret generic dex-secrets -n dex \
+##     --from-literal=GITHUB_CLIENT_SECRET='<github_oauth_app_client_secret>' \
+##     --from-literal=STAGING_CLIENT_SECRET='<random_hex>' \
+##     --from-literal=PRODUCTION_CLIENT_SECRET='<random_hex>'
+##
+## The STAGING_CLIENT_SECRET and PRODUCTION_CLIENT_SECRET values must match
+## OIDC_CLIENT_SECRET in the corresponding config-gen environment.
+##
+## Chart: dex/dex (https://charts.dexidp.io)
+
+image:
+  repository: ghcr.io/dexidp/dex
+  tag: v2.42.0
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# Inject bootstrap secret values as env vars; dex performs $VAR substitution
+# inside its config file.
+envFrom:
+  - secretRef:
+      name: dex-secrets
+
+config:
+  issuer: https://logdex.qzz.io
+
+  storage:
+    type: memory
+
+  web:
+    http: 0.0.0.0:5556
+
+  oauth2:
+    # Skip the "Grant Access" approval screen for trusted internal apps
+    skipApprovalScreen: true
+
+  expiry:
+    idTokens: 24h
+    signingKeys: 6h
+
+  connectors:
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: Ov23liOgTYuFdXxfkfAb
+        clientSecret: $GITHUB_CLIENT_SECRET
+        redirectURI: https://logdex.qzz.io/callback
+        # Email domain enforcement happens in the config-gen backend via
+        # OIDC_ALLOWED_EMAIL_DOMAINS. Dex GitHub connector does not natively
+        # support email-domain filtering, only GitHub org/team membership.
+        loadAllGroups: false
+        teamNameField: slug
+        useLoginAsID: false
+
+  staticClients:
+    - id: config-gen-staging
+      name: Config Generation (staging)
+      secret: $STAGING_CLIENT_SECRET
+      redirectURIs:
+        - https://configstaging.qzz.io/api/auth/oidc/callback
+    - id: config-gen-production
+      name: Config Generation (production)
+      secret: $PRODUCTION_CLIENT_SECRET
+      redirectURIs:
+        - https://production.qzz.io/api/auth/oidc/callback
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: logdex.qzz.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - logdex.qzz.io
+      secretName: logdex-tls
+
+service:
+  type: ClusterIP
+  ports:
+    http:
+      port: 5556
+
+# Avoid running as root
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+
+# Prometheus scraping (optional; chart provides serviceMonitor)
+serviceMonitor:
+  enabled: true
+  namespace: dex
+  interval: 30s
