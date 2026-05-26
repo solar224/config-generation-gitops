@@ -12,6 +12,9 @@ metadata:
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   backoffLimit: 3
+  # Caps total wall-clock time for the Job (all pod attempts combined).
+  # Prevents infinite back-off loops when the migration is stuck.
+  activeDeadlineSeconds: {{ .Values.migrate.activeDeadlineSeconds }}
   template:
     metadata:
       labels:
