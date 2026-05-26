@@ -6,7 +6,7 @@ image:
   frontend:
     tag: "5ba05c787a4eda332aa8c0fbfcdd7fa90aacf93b"
 ingress:
-  host: production.qzz.io
+  host: app.ycantech.com
   clusterIssuer: letsencrypt-prod
 database:
   resources:
@@ -58,9 +58,9 @@ infisical:
         envSlug: prod
 oidc:
   enabled: true
-  issuerURL: https://logdex.qzz.io
+  issuerURL: https://auth.ycantech.com
   clientID: config-gen-production
-  redirectURL: https://production.qzz.io/api/auth/oidc/callback
+  redirectURL: https://app.ycantech.com/api/auth/oidc/callback
   providerName: Dex (GitHub)
   scopes: openid profile email
   superuserEmails:
@@ -73,4 +73,4 @@ oidc:
   hostAliases:
     - ip: 10.96.95.35
       hostnames:
-        - logdex.qzz.io
+        - auth.ycantech.com

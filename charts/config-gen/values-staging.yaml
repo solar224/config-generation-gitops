@@ -6,7 +6,7 @@ image:
   frontend:
     tag: "5ba05c787a4eda332aa8c0fbfcdd7fa90aacf93b"
 ingress:
-  host: configstaging.qzz.io
+  host: staging.ycantech.com
   clusterIssuer: letsencrypt-prod
 database:
   clusterName: config-gen-staging-db
@@ -62,9 +62,9 @@ infisical:
         envSlug: staging
 oidc:
   enabled: true
-  issuerURL: https://logdex.qzz.io
+  issuerURL: https://auth.ycantech.com
   clientID: config-gen-staging
-  redirectURL: https://configstaging.qzz.io/api/auth/oidc/callback
+  redirectURL: https://staging.ycantech.com/api/auth/oidc/callback
   providerName: Dex (GitHub)
   scopes: openid profile email
   superuserEmails:
@@ -77,4 +77,4 @@ oidc:
   hostAliases:
     - ip: 10.96.95.35
       hostnames:
-        - logdex.qzz.io
+        - auth.ycantech.com

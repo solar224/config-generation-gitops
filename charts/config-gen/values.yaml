@@ -35,7 +35,7 @@ backend:
 #     --from-literal=<oidc.clientSecretRef.key>=<random-hex-matching-dex-staticClient>
 oidc:
   enabled: false
-  issuerURL: https://logdex.qzz.io
+  issuerURL: https://auth.ycantech.com
   clientID: ""           # set per environment
   redirectURL: ""        # set per environment (https://<host>/api/auth/oidc/callback)
   browserAuthURL: ""     # optional; only needed when issuerURL != browser-visible URL
@@ -52,7 +52,7 @@ oidc:
   # Example:
   #   hostAliases:
   #     - ip: 10.96.95.35
-  #       hostnames: [logdex.qzz.io]
+  #       hostnames: [auth.ycantech.com]
   hostAliases: []
 
 frontend:
