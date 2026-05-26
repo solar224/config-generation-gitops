@@ -1,0 +1,30 @@
+## CoreDNS hairpin override ArgoCD Application.
+##
+## Replaces the Kind/kubeadm-installed coredns ConfigMap with one that uses
+## the `rewrite` plugin to send public hostnames to the in-cluster ingress.
+## See infrastructure/coredns/configmap.yaml for details.
+##
+## sync-wave "-2" runs before ingress-nginx (-1) and app workloads (default),
+## so DNS is correct from the moment other pods start.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: coredns
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/solar224/config-generation-gitops
+    targetRevision: main
+    path: infrastructure/coredns
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
