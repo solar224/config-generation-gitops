@@ -17,7 +17,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/solar224/config-generation-gitops
-    targetRevision: main
+    targetRevision: GCP
     path: infrastructure/coredns
   destination:
     server: https://kubernetes.default.svc

@@ -2,17 +2,17 @@
 ## Chart: ingress-nginx/ingress-nginx v4.15.1
 ## Repo:  https://kubernetes.github.io/ingress-nginx
 ##
-## Phase 1 — managed by ArgoCD (apps/infrastructure/ingress-nginx.yaml)
+## GCP (GKE) configuration:
+##   GKE provisions a Google Cloud External TCP Load Balancer automatically
+##   when service.type=LoadBalancer. The LB's external IP becomes the A record
+##   for ycantech.com / staging.ycantech.com / auth.ycantech.com.
 ##
-## ⚠️  kind-cluster specific configuration:
-##   The kind cluster (kind-cluster.yaml) has extraPortMappings 80/443 → host.
-##   This config binds the ingress-nginx pod directly to those host ports via
-##   hostPort, so traffic on localhost:80 / localhost:443 reaches ingress-nginx.
-##
-##   For a cloud provider (GKE / EKS / AKS):
-##   - Remove hostPort, nodeSelector, tolerations blocks
-##   - Change service.type to LoadBalancer
-##   - Remove watchIngressWithoutClass (use IngressClass annotation instead)
+##   After ArgoCD syncs, retrieve the assigned IP with:
+##     kubectl get svc -n ingress-nginx ingress-nginx-controller \
+##       -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+##   Then update your DNS provider (Cloudflare) to point all three hostnames
+##   at that IP. cert-manager will issue TLS certs via DNS-01 (Cloudflare)
+##   automatically once DNS propagates.
 
 controller:
   ## Rolling update ensures zero-downtime upgrades
@@ -21,38 +21,25 @@ controller:
     rollingUpdate:
       maxUnavailable: 1
 
-  ## Bind directly to host ports mapped in kind-cluster.yaml extraPortMappings.
-  ## Without this, the kind port mappings have nothing to forward to.
-  hostPort:
-    enabled: true
-
-  ## Shorten termination to avoid delaying pod deletion in kind (no LB drain)
-  terminationGracePeriodSeconds: 0
-
-  ## NodePort: required for kind (no cloud LoadBalancer provisioner available)
+  ## GKE: use a cloud LoadBalancer (GCP provisions an external IP automatically)
   service:
-    type: NodePort
+    type: LoadBalancer
+    ## Optional: reserve a static IP in GCP first and reference it here:
+    ##   gcloud compute addresses create ingress-nginx-ip --region=<region>
+    ## Then uncomment:
+    # loadBalancerIP: "x.x.x.x"
+    ## Optional annotations for GCP (e.g. backend service timeout):
+    annotations: {}
 
-  ## Allow Ingress resources without explicit ingressClassName annotation
-  ## (avoids needing to update all Ingress manifests in Phase 3)
+  ## Allow Ingress resources without explicit ingressClassName annotation.
+  ## Keeps all existing Ingress manifests working without adding annotations.
   watchIngressWithoutClass: true
 
-  ## Only schedule on the node labeled ingress-ready=true
-  ## This label is set in kind-cluster.yaml kubeadmConfigPatches
-  nodeSelector:
-    ingress-ready: "true"
+  ## Allow enough time for GCP LB health-check drain before pod termination
+  terminationGracePeriodSeconds: 60
 
-  ## kind control-plane nodes have a taint; tolerate it so ingress-nginx
-  ## can schedule on the single-node kind cluster
-  tolerations:
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/control-plane
-      operator: Equal
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/master
-      operator: Equal
-
-  ## Forward real client IP to backend pods
+  ## Forward real client IP to backend pods.
+  ## On GKE with proxy-protocol disabled (the default), use X-Forwarded-For.
   config:
     use-forwarded-headers: "true"
     compute-full-forwarded-for: "true"

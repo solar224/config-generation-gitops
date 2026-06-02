@@ -12,6 +12,9 @@ metadata:
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   backoffLimit: 3
+  # Caps total wall-clock time for the Job (all pod attempts combined).
+  # Prevents infinite back-off loops when the migration is stuck.
+  activeDeadlineSeconds: {{ .Values.migrate.activeDeadlineSeconds }}
   template:
     metadata:
       labels:
@@ -24,10 +27,32 @@ spec:
           image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"
           imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
           command:
-            - /usr/local/bin/migrate
-            - -path=/migrations
-            - -database=$(DATABASE_DIRECT_URL)
-            - up
+            - /bin/sh
+            - -c
+            - |
+              M="/usr/local/bin/migrate -path=/migrations -database=${DATABASE_DIRECT_URL}"
+
+              # First attempt
+              if OUTPUT=$(${M} up 2>&1); then
+                echo "${OUTPUT}"
+                exit 0
+              fi
+
+              # On "Dirty database version N": the previous pod was killed while
+              # the migration SQL was running. PostgreSQL rolls back the open
+              # transaction, so the schema change was NOT applied. Force back to
+              # version N-1 so migrate will re-run migration N, then continue.
+              if echo "${OUTPUT}" | grep -qE "Dirty database version [0-9]+"; then
+                DIRTY=$(echo "${OUTPUT}" | grep -oE "Dirty database version [0-9]+" | grep -oE "[0-9]+")
+                PREV=$((DIRTY - 1))
+                echo "Dirty version ${DIRTY}: SQL was rolled back, forcing to ${PREV} and retrying..."
+                ${M} force ${PREV}
+                exec ${M} up
+              fi
+
+              # Any other error — surface it and let the Job retry / alert fire
+              echo "${OUTPUT}" >&2
+              exit 1
           envFrom:
             - secretRef:
                 name: {{ .Values.infisical.managedSecretName }}

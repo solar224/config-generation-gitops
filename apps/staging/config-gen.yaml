@@ -23,7 +23,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/solar224/config-generation-gitops
-    targetRevision: main
+    targetRevision: GCP
     path: charts/config-gen
     helm:
       valueFiles:

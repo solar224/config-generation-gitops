@@ -2,9 +2,9 @@
 # Do not edit manually.
 image:
   backend:
-    tag: "5ba05c787a4eda332aa8c0fbfcdd7fa90aacf93b"
+    tag: "76210f576908e219b38eabea36787056d822eb33"
   frontend:
-    tag: "5ba05c787a4eda332aa8c0fbfcdd7fa90aacf93b"
+    tag: "76210f576908e219b38eabea36787056d822eb33"
 ingress:
   host: staging.ycantech.com
   clusterIssuer: letsencrypt-prod
@@ -74,7 +74,7 @@ oidc:
   clientSecretRef:
     name: config-gen-oidc-secret
     key: OIDC_CLIENT_SECRET
-  hostAliases:
-    - ip: 10.96.95.35
-      hostnames:
-        - auth.ycantech.com
+  # On GKE the ingress-nginx ClusterIP is unpredictable; CoreDNS hairpin rewrite
+  # (infrastructure/coredns/configmap.yaml) routes auth.ycantech.com to the
+  # ingress-nginx service DNS name cluster-internally, so hostAliases are not needed.
+  hostAliases: []

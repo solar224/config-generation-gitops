@@ -144,3 +144,9 @@ infisical:
 
 networkPolicy:
   enabled: true
+
+migrate:
+  # Maximum wall-clock seconds for the entire migration Job (all pod attempts).
+  # If migrations haven't completed within this window the Job is killed,
+  # preventing infinite back-off loops from blocking ArgoCD PostSync indefinitely.
+  activeDeadlineSeconds: 120

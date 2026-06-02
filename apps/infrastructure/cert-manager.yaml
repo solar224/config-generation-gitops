@@ -28,10 +28,10 @@ spec:
         valueFiles:
           - $gitops/infrastructure/cert-manager/values.yaml
     - repoURL: https://github.com/solar224/config-generation-gitops
-      targetRevision: main
+      targetRevision: GCP
       ref: gitops
     - repoURL: https://github.com/solar224/config-generation-gitops
-      targetRevision: main
+      targetRevision: GCP
       path: infrastructure/cert-manager/issuers
   destination:
     server: https://kubernetes.default.svc

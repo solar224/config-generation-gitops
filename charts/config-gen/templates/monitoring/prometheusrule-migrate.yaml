@@ -1,0 +1,37 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "config-gen.fullname" . }}-migrate
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "config-gen.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate
+spec:
+  groups:
+    - name: config-gen.migrate
+      rules:
+        # Fires when a migration Job's Failed condition becomes true
+        # (i.e. BackoffLimitExceeded or DeadlineExceeded).
+        # The failed Job is NOT auto-deleted (HookSucceeded policy), so the
+        # metric stays > 0 until the Job object is removed — giving the on-call
+        # engineer time to inspect logs before the artefact disappears.
+        - alert: MigrationJobFailed
+          expr: |
+            kube_job_status_conditions{
+              namespace="{{ .Release.Namespace }}",
+              condition="Failed",
+              status="true",
+              job_name=~"{{ include "config-gen.fullname" . }}-migrate-.*"
+            } > 0
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: >-
+              Migration job {{ "{{" }} $labels.job_name {{ "}}" }} failed
+            description: >-
+              The database migration job {{ "{{" }} $labels.job_name {{ "}}" }}
+              in namespace {{ "{{" }} $labels.namespace {{ "}}" }} has reached its
+              backoff or deadline limit and will not retry.
+              Check pod logs and fix the dirty migration state before the next
+              deployment (see runbook: docs/version-control.md).

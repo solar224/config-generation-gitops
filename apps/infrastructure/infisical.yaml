@@ -23,7 +23,7 @@ spec:
         valueFiles:
           - $gitops/infrastructure/infisical/values.yaml
     - repoURL: https://github.com/solar224/config-generation-gitops
-      targetRevision: main
+      targetRevision: GCP
       ref: gitops
   destination:
     server: https://kubernetes.default.svc

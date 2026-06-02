@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/solar224/config-generation-gitops
-    targetRevision: main
+    targetRevision: GCP
     path: apps
     directory:
       # REQUIRED: without recurse: true, ArgoCD only reads the apps/ root directory
