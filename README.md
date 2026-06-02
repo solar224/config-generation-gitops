@@ -8,8 +8,8 @@ All Kubernetes infrastructure and application state is declared here and reconci
 | Branch | Target |
 |--------|--------|
 | `main` | Local deployment on a single-node [Kind](https://kind.sigs.k8s.io/) cluster |
+| `gcp` | GCP (GKE) |
 | *(planned)* `aws` | AWS (EKS) |
-| *(planned)* `gcp` | GCP (GKE) |
 
 ## Documentation
 
