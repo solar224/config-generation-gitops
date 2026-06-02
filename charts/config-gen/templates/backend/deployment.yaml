@@ -8,6 +8,14 @@ metadata:
     app.kubernetes.io/component: backend
 spec:
   replicas: {{ .Values.backend.replicaCount }}
+  # maxUnavailable: 0 guarantees zero-downtime rolling updates:
+  # new pod must pass readiness probe before the old pod is terminated.
+  # Requires enough node resources to run replicaCount+1 pods briefly.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       {{- include "config-gen.backend.selectorLabels" . | nindent 6 }}
