@@ -1,11 +1,13 @@
 ## CoreDNS hairpin override ArgoCD Application.
 ##
-## Replaces the Kind/kubeadm-installed coredns ConfigMap with one that uses
-## the `rewrite` plugin to send public hostnames to the in-cluster ingress.
-## See infrastructure/coredns/configmap.yaml for details.
+## GKE branch: this Application is disabled.
+## On GKE, pods reach external IPs (auth.ycantech.com → GCP LB) directly
+## through the GCP network — no hairpin rewrite needed.
+## Re-enable (remove the `enabled: false` annotation / uncomment) only when
+## running on Kind or kubeadm where hairpin NAT is a limitation.
 ##
-## sync-wave "-2" runs before ingress-nginx (-1) and app workloads (default),
-## so DNS is correct from the moment other pods start.
+## Kind branch: re-enable and uncomment the rewrite lines in
+## infrastructure/coredns/configmap.yaml.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -22,9 +24,18 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
+  # GKE: sync is disabled — do NOT overwrite GKE's managed CoreDNS ConfigMap.
   syncPolicy:
     automated:
       prune: false
-      selfHeal: true
+      selfHeal: false
     syncOptions:
       - ServerSideApply=true
+  # Ignore all differences so ArgoCD stays green without touching CoreDNS.
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: coredns
+      namespace: kube-system
+      jsonPointers:
+        - /data
