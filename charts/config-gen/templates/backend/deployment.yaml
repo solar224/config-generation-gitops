@@ -23,6 +23,9 @@ spec:
       hostAliases:
         {{- toYaml .Values.oidc.hostAliases | nindent 8 }}
       {{- end }}
+      # Spread pods across nodes (anti-affinity) and, when enabled, across zones.
+      # On a single-node Kind cluster topologySpread is a no-op; on multi-zone
+      # GKE it guarantees at most maxSkew pods difference between any two zones.
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -32,6 +35,15 @@ spec:
                   matchLabels:
                     {{- include "config-gen.backend.selectorLabels" . | nindent 20 }}
                 topologyKey: kubernetes.io/hostname
+      {{- if .Values.backend.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.backend.topologySpread.maxSkew }}
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: {{ .Values.backend.topologySpread.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "config-gen.backend.selectorLabels" . | nindent 14 }}
+      {{- end }}
       containers:
         - name: backend
           image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"

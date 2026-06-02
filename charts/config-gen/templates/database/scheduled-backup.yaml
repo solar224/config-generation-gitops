@@ -1,0 +1,29 @@
+{{- if .Values.database.backup.enabled }}
+# CloudNativePG ScheduledBackup — triggers a full base backup on a cron schedule.
+# The backup is stored in GCS alongside the continuously archived WAL files.
+# Together they achieve RPO ≤ 5 min; the standby replica provides RTO ≤ 30 s.
+#
+# GCS prerequisites (one-time, out-of-band):
+#   1. Create a GCS bucket: gs://<database.backup.destinationPath>
+#   2. Create a GCP Service Account with roles/storage.objectAdmin on the bucket.
+#   3. Bind it to the CNPG cluster SA via Workload Identity:
+#        gcloud iam service-accounts add-iam-policy-binding \
+#          <gcp-sa>@<project>.iam.gserviceaccount.com \
+#          --role roles/iam.workloadIdentityUser \
+#          --member "serviceAccount:<project>.svc.id.goog[<namespace>/<clusterName>]"
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: {{ .Values.database.clusterName }}-scheduled
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "config-gen.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  schedule: {{ .Values.database.backup.schedule | quote }}
+  backupOwnerReference: self
+  cluster:
+    name: {{ .Values.database.clusterName }}
+  # Keep the backup job running until it completes (don't cancel on ArgoCD sync)
+  immediate: false
+{{- end }}

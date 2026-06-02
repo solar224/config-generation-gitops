@@ -9,6 +9,10 @@ ingress:
   host: app.ycantech.com
   clusterIssuer: letsencrypt-prod
 database:
+  instances: 2          # 1 primary + 1 hot-standby replica → automatic failover
+  storage:
+    size: 10Gi
+    storageClass: premium-rwo  # GKE SSD-backed PV (pd-ssd); higher IOPS for production
   resources:
     requests:
       cpu: 100m
@@ -16,8 +20,15 @@ database:
     limits:
       cpu: 500m
       memory: 512Mi
+  # Enable GCS backup for production.
+  # Prerequisites: create the bucket and bind Workload Identity (see backup.yaml comments).
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"
+    retentionPolicy: "14d"
+    destinationPath: "gs://ycantech-db-backup/production/config-gen"
 pgbouncer:
-  instances: 1
+  instances: 2           # 2 PgBouncer pods for connection-pool HA
   resources:
     requests:
       cpu: 50m
@@ -26,7 +37,7 @@ pgbouncer:
       cpu: 200m
       memory: 64Mi
 backend:
-  replicaCount: 1
+  replicaCount: 2        # always ≥ 2 replicas; PDB ensures 1 stays up during rolling
   resources:
     requests:
       cpu: 50m
@@ -35,10 +46,14 @@ backend:
       cpu: 300m
       memory: 256Mi
   hpa:
-    minReplicas: 1
-    maxReplicas: 2
+    minReplicas: 2       # never scale below 2
+    maxReplicas: 4
+  topologySpread:
+    enabled: true        # spread across GKE zones
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
 frontend:
-  replicaCount: 1
+  replicaCount: 2
   resources:
     requests:
       cpu: 20m
@@ -47,8 +62,12 @@ frontend:
       cpu: 200m
       memory: 128Mi
   hpa:
-    minReplicas: 1
-    maxReplicas: 2
+    minReplicas: 2
+    maxReplicas: 4
+  topologySpread:
+    enabled: true
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
 infisical:
   enabled: false
   authentication:

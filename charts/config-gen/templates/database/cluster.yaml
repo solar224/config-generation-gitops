@@ -32,3 +32,24 @@ spec:
   # Primary service — backend connects via PgBouncer (Pooler) to this
   # Standby service — can be used for read replicas
   # CloudNativePG creates: {clusterName}-rw, {clusterName}-ro, {clusterName}-r
+
+  {{- if .Values.database.backup.enabled }}
+  # Continuous WAL archiving + base backup to GCS.
+  # Uses GKE Workload Identity — no static credentials required.
+  # RPO ≤ 5 min (WAL shipping interval), RTO ≤ 30s (standby auto-promotion).
+  backup:
+    retentionPolicy: {{ .Values.database.backup.retentionPolicy | quote }}
+    barmanObjectStore:
+      googleCredentials:
+        # Workload Identity: the CNPG service account is bound to a GCP SA
+        # with roles/storage.objectAdmin on the backup bucket.
+        gkeEnvironment: true
+      destinationPath: {{ .Values.database.backup.destinationPath | quote }}
+      wal:
+        compression: gzip
+        maxParallel: 2
+      data:
+        compression: gzip
+        immediateCheckpoint: false
+        jobs: 2
+  {{- end }}

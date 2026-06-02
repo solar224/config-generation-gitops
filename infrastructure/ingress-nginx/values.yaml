@@ -21,6 +21,11 @@ controller:
     rollingUpdate:
       maxUnavailable: 1
 
+  ## Run 2 ingress-nginx replicas so rolling updates never drop requests.
+  ## On GKE multi-zone clusters the podAntiAffinity (built into the chart)
+  ## places them on different nodes automatically.
+  replicaCount: 2
+
   ## GKE: use a cloud LoadBalancer (GCP provisions an external IP automatically)
   service:
     type: LoadBalancer
@@ -28,18 +33,19 @@ controller:
     ##   gcloud compute addresses create ingress-nginx-ip --region=<region>
     ## Then uncomment:
     # loadBalancerIP: "x.x.x.x"
-    ## Optional annotations for GCP (e.g. backend service timeout):
+    ## externalTrafficPolicy: Local — avoids an extra hop through kube-proxy
+    ## SNAT and preserves the real client IP in X-Forwarded-For headers.
+    ## Requires at least one ingress-nginx pod per node that the LB health-checks
+    ## mark as healthy; with replicaCount: 2 across ≥ 2 nodes this is satisfied.
+    externalTrafficPolicy: Local
     annotations: {}
 
   ## Allow Ingress resources without explicit ingressClassName annotation.
-  ## Keeps all existing Ingress manifests working without adding annotations.
   watchIngressWithoutClass: true
 
   ## Allow enough time for GCP LB health-check drain before pod termination
   terminationGracePeriodSeconds: 60
 
-  ## Forward real client IP to backend pods.
-  ## On GKE with proxy-protocol disabled (the default), use X-Forwarded-For.
   config:
     use-forwarded-headers: "true"
     compute-full-forwarded-for: "true"
@@ -57,4 +63,4 @@ controller:
   metrics:
     enabled: true
     serviceMonitor:
-      enabled: false  # ServiceMonitor created by kube-prometheus-stack instead
+      enabled: false

@@ -27,6 +27,12 @@ backend:
     targetCPUUtilizationPercentage: 70
   pdb:
     minAvailable: 1
+  # Zone-level pod spreading for multi-zone GKE clusters.
+  # Set enabled: false on single-node environments (Kind / dev).
+  topologySpread:
+    enabled: false
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
 
 # OIDC / Dex single-sign-on configuration.
 # When oidc.enabled=true, the backend Deployment receives all OIDC_* env vars.
@@ -70,6 +76,10 @@ frontend:
     targetCPUUtilizationPercentage: 70
   pdb:
     minAvailable: 1
+  topologySpread:
+    enabled: false
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
   exporter:
     image:
       repository: nginx/nginx-prometheus-exporter
@@ -101,6 +111,14 @@ database:
     limits:
       cpu: "1"
       memory: 1Gi
+  # GCS continuous backup via CloudNativePG barmanObjectStore + Workload Identity.
+  # Achieves RPO ≤ 5 min (WAL) and RTO ≤ 30 s (standby promotion).
+  # Set enabled: true per environment; destinationPath must point to a GCS bucket.
+  backup:
+    enabled: false
+    schedule: "0 2 * * *"            # daily base backup at 02:00 UTC
+    retentionPolicy: "7d"            # keep 7 days of base backups
+    destinationPath: "gs://your-bucket/config-gen"  # override per environment
 
 pgbouncer:
   instances: 2

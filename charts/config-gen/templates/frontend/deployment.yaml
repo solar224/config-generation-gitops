@@ -27,6 +27,15 @@ spec:
                   matchLabels:
                     {{- include "config-gen.frontend.selectorLabels" . | nindent 20 }}
                 topologyKey: kubernetes.io/hostname
+      {{- if .Values.frontend.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.frontend.topologySpread.maxSkew }}
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: {{ .Values.frontend.topologySpread.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "config-gen.frontend.selectorLabels" . | nindent 14 }}
+      {{- end }}
       volumes:
         - name: nginx-config
           configMap:
