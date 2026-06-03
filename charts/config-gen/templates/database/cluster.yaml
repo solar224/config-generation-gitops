@@ -11,6 +11,9 @@ spec:
 
   # Expose the postgres superuser credentials in a K8s Secret so the
   # migration job can run DDL (ALTER/DROP TABLE) which requires ownership.
+  # enableSuperuserAccess is false by default in CNPG v1.20+; must be
+  # explicitly enabled to allow password login as the postgres superuser.
+  enableSuperuserAccess: true
   superuserSecret:
     name: {{ .Values.database.clusterName }}-superuser
 
