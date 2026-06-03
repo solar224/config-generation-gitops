@@ -9,6 +9,11 @@ metadata:
 spec:
   instances: {{ .Values.database.instances }}
 
+  # Expose the postgres superuser credentials in a K8s Secret so the
+  # migration job can run DDL (ALTER/DROP TABLE) which requires ownership.
+  superuserSecret:
+    name: {{ .Values.database.clusterName }}-superuser
+
   bootstrap:
     initdb:
       database: {{ .Values.database.bootstrap.dbName }}

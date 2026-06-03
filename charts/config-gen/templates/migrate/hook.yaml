@@ -57,9 +57,11 @@ spec:
             - secretRef:
                 name: {{ .Values.infisical.managedSecretName }}
           env:
-            # DATABASE_DIRECT_URL comes from the CNPG-created secret (bypasses PgBouncer)
+            # DATABASE_DIRECT_URL uses the postgres superuser (bypasses PgBouncer).
+            # DDL statements (ALTER/DROP TABLE) require table ownership; the superuser
+            # can operate on any table regardless of owner.
             - name: DATABASE_DIRECT_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.clusterName }}-app
+                  name: {{ .Values.database.clusterName }}-superuser
                   key: uri
