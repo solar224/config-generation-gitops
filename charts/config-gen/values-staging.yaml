@@ -2,9 +2,9 @@
 # Do not edit manually.
 image:
   backend:
-    tag: "2fbf8662e1ace6b77c3d5d42b6877179637d2a7b"
+    tag: "9fc59d7fb854d72ef4aa7ceb85e2a7ac55485022"
   frontend:
-    tag: "2fbf8662e1ace6b77c3d5d42b6877179637d2a7b"
+    tag: "9fc59d7fb854d72ef4aa7ceb85e2a7ac55485022"
 ingress:
   host: staging.ycantech.com
   clusterIssuer: letsencrypt-prod
