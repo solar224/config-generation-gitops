@@ -14,4 +14,4 @@ All Kubernetes infrastructure and application state is declared here and reconci
 ## Documentation
 
 - [Local deployment operation guide](docs/operation-guide.md) — prerequisites, bootstrap steps, secrets setup, DNS/TLS, day-2 operations, and troubleshooting for the `main` branch.
-- [GPC deployment operation guide](docs/GCP-guide.md) — prerequisites, bootstrap steps, secrets setup, DNS/TLS, day-2 operations, and troubleshooting for the `GCP` branch.
+- [GCP deployment operation guide](docs/GCP-guide.md) — prerequisites, bootstrap steps, secrets setup, DNS/TLS, day-2 operations, and troubleshooting for the `GCP` branch.
